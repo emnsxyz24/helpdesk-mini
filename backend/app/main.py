@@ -1,0 +1,40 @@
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.config import settings
+from app.routers import auth
+
+app = FastAPI(title="Helpdesk Mini", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={'error': {'status': exc.status_code, 'message':exc.detail}},
+        headers=getattr(exc, 'headers', None),
+    )
+    
+@app.exception_handler(RequestValidationError)
+async def validation_exception(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={'error': {'status': 422, 'message': "Invalid Input", 'detail': jsonable_encoder(exc.body)}}
+    )
+
+app.include_router(auth.router)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
