@@ -6,7 +6,7 @@ from app.deps import get_current_user
 from app.models import User
 from app.schemas import LoginIn, MeOut, RefreshIn, RegisterBusinessIn, TokenOut
 from app.security import create_access_token, create_refresh_token, decode_token
-from app.services import auth_services
+from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -15,12 +15,12 @@ def _token_pair(user_id: int) -> TokenOut:
 
 @router.post("/register-business", response_model=TokenOut, status_code=201)
 def register_business(data: RegisterBusinessIn, db: Session = Depends(get_db)):
-    admin = auth_services.register_business(db, data)
+    admin = auth_service.register_business(db, data)
     return _token_pair(admin.id)
 
 @router.post("/login", response_model=TokenOut)
 def login(data: LoginIn, db: Session = Depends(get_db)):
-    user = auth_services.authenticate(db, data.email, data.password)
+    user = auth_service.authenticate(db, data.email, data.password)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     return _token_pair(user.id)

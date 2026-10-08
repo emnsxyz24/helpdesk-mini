@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
-from app.routers import auth
+from app.routers import auth, users
 
 app = FastAPI(title="Helpdesk Mini", version="1.0.0")
 
@@ -30,10 +30,11 @@ async def http_error(request: Request, exc: StarletteHTTPException):
 async def validation_exception(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=422,
-        content={'error': {'status': 422, 'message': "Invalid Input", 'detail': jsonable_encoder(exc.body)}}
+        content={'error': {'status': 422, 'message': "Invalid Input", 'detail': jsonable_encoder(exc.errors())}},
     )
 
 app.include_router(auth.router)
+app.include_router(users.router)
 
 @app.get("/health")
 def health():
