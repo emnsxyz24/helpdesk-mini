@@ -24,12 +24,7 @@ def register_business(db: Session, data: RegisterBusinessIn) -> User:
     if email_taken(db, email):
         raise HTTPException(status_code=409, detail="Email already registered")
     business = Business(name=data.business_name, slug=_unique_slug(db, data.business_name))
-    admin = User(
-        business=business,
-        name=data.name,
-        email=email,
-        password_hash=hash_password(data.password),
-        role=Role.admin,
+    admin = User(business=business, name=data.name, email=email, password_hash=hash_password(data.password), role=Role.admin,
     )
     db.add(admin)
     db.commit()

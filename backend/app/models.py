@@ -55,8 +55,8 @@ class Ticket(Base):
     assigned_agent_id: Mapped[int | None] = mapped_column(ForeignKey('users.id'), nullable=True)
     subject: Mapped[str] = mapped_column(String(255))
     category: Mapped[str] = mapped_column(String(100))
-    priority: Mapped[Priority] = mapped_column(Enum(Priority, name='priority', default=Priority.medium))
-    status: Mapped[Status] = mapped_column(Enum(Status, name='status', default=Status.open))
+    priority: Mapped[Priority] = mapped_column(Enum(Priority, name='priority'), default=Priority.medium)
+    status: Mapped[Status] = mapped_column(Enum(Status, name='status'), default=Status.open)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     

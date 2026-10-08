@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
-from app.routers import auth, users
+from app.routers import auth, users, tickets
 
 app = FastAPI(title="Helpdesk Mini", version="1.0.0")
 
@@ -35,6 +35,7 @@ async def validation_exception(request: Request, exc: RequestValidationError):
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(tickets.router)
 
 @app.get("/health")
 def health():
