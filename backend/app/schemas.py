@@ -83,7 +83,9 @@ class TicketOut(ORMModel):
 class MessageOut(BaseModel):
     id: int
     ticket_id: int
-    sender: UserBrief
+    sender_id : int
+    sender_name : str
+    sender_role : Role
     body: str
     created_at: datetime
 

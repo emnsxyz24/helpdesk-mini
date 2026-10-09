@@ -67,7 +67,7 @@ def list_messages(db: Session, ticket: Ticket) -> list[MessageOut]:
 
 def add_message(db: Session, ticket: Ticket, sender: User, body: str) -> Message:
     if ticket.status == Status.closed:
-        raise HTTPException(status_code=409, detail="This thicker is closed")
+        raise HTTPException(status_code=409, detail="This ticket is closed")
     message = Message(ticket_id=ticket.id, sender_id=sender.id, body=body)
     ticket.updated_at = utcnow()
     db.add(message)
@@ -88,9 +88,9 @@ def _assign(db: Session, ticket: Ticket, actor: User, agent_id: int | None) -> N
         )
         if agent is None:
             raise HTTPException(status_code=404, detail="Agent not found")
-        ticket.assigned_agent_id = agent.id
-        if agent_id is not None and ticket.status == Status.open:
-            ticket.status = Status.in_progress
+    ticket.assigned_agent_id = agent.id
+    if agent_id is not None and ticket.status == Status.open:
+        ticket.status = Status.in_progress
             
 def _change_status(ticket: Ticket, actor: User, new_status: Status) -> None:
     if new_status == ticket.status:
