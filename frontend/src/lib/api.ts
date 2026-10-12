@@ -55,7 +55,9 @@ export async function apiFetch<T>(
   headers.set("Content-Type", "application/json");
   const token = getAccessToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-
+  if (!token && !getRefreshToken() && !PUBLIC_PATHS.includes(path)) {
+    throw new ApiError(401, "Not authenticated");
+  }
   const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
 
   if (res.status === 401 && !isRetry && !PUBLIC_PATHS.includes(path)) {
