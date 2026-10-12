@@ -49,13 +49,16 @@ export default function TicketInfoPanel({
     enabled: isAdmin,
   });
 
+  const canManageTicketStatus =
+    isStaff &&
+    (isAdmin || (isAgent && ticket.assigned_agent?.id === currentUser.id));
+
   const agents =
     users?.filter(
       (u) =>
         u.role === "agent" &&
         u.name.toLowerCase().includes(search.trim().toLowerCase()),
     ) ?? [];
-
   return (
     <aside className="flex flex-col gap-4 rounded-lg border bg-white p-4 shadow-xs">
       <h2 className="text-base font-semibold text-gray-900 border-b pb-2">
@@ -217,49 +220,54 @@ export default function TicketInfoPanel({
                 Mark In Progress
               </Button>
             )}
+            {canManageTicketStatus && (
+              <>
+                {ticket.status === "in_progress" && (
+                  <Button
+                    variant="default"
+                    disabled={isUpdating}
+                    onClick={() => onUpdate({ status: "resolved" })}
+                  >
+                    Resolve ticket
+                  </Button>
+                )}
 
-            {isStaff && ticket.status === "in_progress" && (
-              <Button
-                variant="default"
-                disabled={isUpdating}
-                onClick={() => onUpdate({ status: "resolved" })}
-              >
-                Resolve ticket
-              </Button>
-            )}
-
-            {isStaff && ticket.status === "resolved" && (
-              <Dialog>
-                <DialogTrigger
-                  render={<Button
-                      variant="destructive"
-                      disabled={isUpdating}
-                    >
-                      Close ticket
-                    </Button>}
-                />
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Are you sure want to close the ticket?</DialogTitle>
-
-                    <DialogDescription>
-                      This will close the ticket permanently. This action cannot be undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <DialogClose
-                      render={<Button variant="outline">Cancel</Button>}
+                {isStaff && ticket.status === "resolved" && (
+                  <Dialog>
+                    <DialogTrigger
+                      render={
+                        <Button variant="destructive" disabled={isUpdating}>
+                          Close ticket
+                        </Button>
+                      }
                     />
-                    <Button
-                      variant="destructive"
-                      disabled={isUpdating}
-                      onClick={() => onUpdate({ status: "closed" })}
-                    >
-                      Close ticket
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>
+                          Are you sure want to close the ticket?
+                        </DialogTitle>
+
+                        <DialogDescription>
+                          This will close the ticket permanently. This action
+                          cannot be undone.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <DialogClose
+                          render={<Button variant="outline">Cancel</Button>}
+                        />
+                        <Button
+                          variant="destructive"
+                          disabled={isUpdating}
+                          onClick={() => onUpdate({ status: "closed" })}
+                        >
+                          Close ticket
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </>
             )}
 
             {isCustomer && ticket.status === "resolved" && (

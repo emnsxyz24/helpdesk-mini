@@ -70,6 +70,10 @@ def add_message(db: Session, ticket: Ticket, sender: User, body: str) -> Message
       raise HTTPException(status_code=409, detail="This ticket is closed")
     if sender.role == Role.admin:
       raise HTTPException(status_code=403, detail="Admins cannot send messages")
+    if ticket.assigned_agent_id is None:
+       raise HTTPException(status_code=409, detail="Ticket must be assigned to an agent before chatting")
+    if sender.role == Role.agent and ticket.assigned_agent_id != sender.id:
+        raise HTTPException(status_code=403, detail="Only the assigned agent can reply to this ticket")
     message = Message(ticket_id=ticket.id, sender_id=sender.id, body=body)
     ticket.updated_at = utcnow()
     db.add(message)

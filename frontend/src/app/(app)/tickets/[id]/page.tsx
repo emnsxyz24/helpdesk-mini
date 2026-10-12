@@ -104,6 +104,14 @@ export default function TicketDetailPage() {
   }
 
   const isClosed = ticket.status === "closed";
+  const isAssignedAgent = ticket.assigned_agent?.id === me.id;
+
+  const canSendMessage =
+    !isClosed &&
+    isConnected &&
+    me.role !== "admin" &&
+    !!ticket.assigned_agent &&
+    (me.role !== "agent" || isAssignedAgent);
 
   return (
     <div className="transition-all duration-300 animate-in fade-in slide-in-from-top-2">
@@ -210,11 +218,11 @@ export default function TicketDetailPage() {
                 setInputBody(e.target.value);
                 sendTyping();
               }}
-              disabled={isClosed || !isConnected || me.role === "admin"}
+              disabled={!canSendMessage}
             />
             <Button
               type="submit"
-              disabled={isClosed || !isConnected || !inputBody.trim() || me.role === "admin"}
+              disabled={!canSendMessage || !inputBody.trim()}
             >
               <svg
                 viewBox="0 0 24 24"
