@@ -103,6 +103,17 @@ export default function TicketDetailPage() {
     return <ErrorBox message={errorTicket?.message ?? "Ticket not found"} />;
   }
 
+  function formatMessageTime(iso: string) {
+    const date = new Date(iso);
+    const isToday = date.toDateString() === new Date().toDateString();
+    return date.toLocaleString([], {
+      ...(isToday ? {} : { day: "2-digit", month: "short" }),
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+  
   const isClosed = ticket.status === "closed";
   const isAssignedAgent = ticket.assigned_agent?.id === me.id;
 
@@ -185,11 +196,7 @@ export default function TicketDetailPage() {
                       {msg.body}
                     </div>
                     <span className="text-[10px] px-1 py-0.5 text-primary border rounded-lg bg-background">
-                      {new Date(msg.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })}
+                      {formatMessageTime(msg.created_at)}
                     </span>
                   </div>
                 </div>
