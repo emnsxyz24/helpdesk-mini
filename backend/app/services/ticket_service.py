@@ -28,7 +28,7 @@ def list_tickets(db: Session, user: User, status: Status | None) -> list[Ticket]
     if status is not None:
         stmt = stmt.where(Ticket.status == status)
     stmt = stmt.options(selectinload(Ticket.customer), selectinload(Ticket.assigned_agent))
-    return list(db.scalars(stmt.order_by(Ticket.updated_at.desc())).all())
+    return db.scalars(stmt.order_by(Ticket.updated_at.desc())).all()
 
 def create_ticket(db: Session, customer: User, data: TicketCreateIn) -> Ticket:
     ticket = Ticket(
@@ -67,7 +67,9 @@ def list_messages(db: Session, ticket: Ticket) -> list[MessageOut]:
 
 def add_message(db: Session, ticket: Ticket, sender: User, body: str) -> Message:
     if ticket.status == Status.closed:
-        raise HTTPException(status_code=409, detail="This ticket is closed")
+      raise HTTPException(status_code=409, detail="This ticket is closed")
+    if sender.role == Role.admin:
+      raise HTTPException(status_code=403, detail="Admins cannot send messages")
     message = Message(ticket_id=ticket.id, sender_id=sender.id, body=body)
     ticket.updated_at = utcnow()
     db.add(message)
@@ -88,7 +90,7 @@ def _assign(db: Session, ticket: Ticket, actor: User, agent_id: int | None) -> N
         )
         if agent is None:
             raise HTTPException(status_code=404, detail="Agent not found")
-    ticket.assigned_agent_id = agent.id
+    ticket.assigned_agent_id = agent_id
     if agent_id is not None and ticket.status == Status.open:
         ticket.status = Status.in_progress
             
@@ -116,5 +118,6 @@ def update_ticket(db: Session, ticket_id: int, actor: User, data: TicketUpdateIn
         _assign(db, ticket, actor, data.assigned_agent_id)
     if "status" in data.model_fields_set:
         _change_status(ticket, actor, data.status)
+    ticket.updated_at = utcnow()
     db.commit()
     return TicketOut.model_validate(ticket)

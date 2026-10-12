@@ -22,7 +22,7 @@ def _authorize(token: str, ticket_id: int) -> int | None:
             ticket_service.get_ticket_for_user(db, ticket_id, user)
         except HTTPException:
             return None
-        return user.id
+        return user.id, user.name
 
 def _save_message(user_id: int, ticket_id: int, body: str) -> None:
     with SessionLocal() as db:
@@ -35,19 +35,27 @@ def _save_message(user_id: int, ticket_id: int, body: str) -> None:
     
 @router.websocket("/ws/tickets/{ticket_id}")
 async def ticket_socket(websocket: WebSocket, ticket_id: int, token: str = Query(...)):
-    user_id = await run_in_threadpool(_authorize, token, ticket_id)
-    if user_id is None:
+    user_result = await run_in_threadpool(_authorize, token, ticket_id)
+    if user_result is None:
         await websocket.close(code=4401)
         return
+    user_id, user_name = user_result
     await websocket.accept()
     manager.connect(ticket_id, websocket)
     try:
         while True:
-            data = await websocket.receive_text()
+            data = await websocket.receive_text() 
             try:
-                body = str(json.loads(data).get("body", "")).strip()
-            except (ValueError, AttributeError):
-                body = ""
+                parsed = json.loads(data)
+            except ValueError:
+                continue
+            if parsed.get("type") == "typing":
+                await manager.broadcast(
+                    ticket_id,
+                    {"type": "typing", "sender_id": user_id, "sender_name": user_name},
+                )
+                continue
+            body = str(parsed.get("body", "")).strip()
             if not body or len(body) > 5000:
                 await websocket.send_json({"type": "error", "message": "Message must be 1-5000 characters long"})
                 continue
@@ -56,7 +64,7 @@ async def ticket_socket(websocket: WebSocket, ticket_id: int, token: str = Query
             except HTTPException as exc:
                 await websocket.send_json({"type": "error", "message": exc.detail})
                 continue
-            await manager.broadcast(ticket_id, event)
+            await manager.broadcast(ticket_id, event) 
     except WebSocketDisconnect:
         pass
     finally:

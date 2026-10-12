@@ -37,7 +37,7 @@ class UserBrief(ORMModel):
 
 class UserOut(UserBrief):
     email: EmailStr
-    business: BusinessOut
+    business_id: int
     created_at: datetime
     
 class MeOut(UserOut):
@@ -60,8 +60,8 @@ class UserCreateIn(BaseModel):
 class TicketCreateIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     
-    subject: str = Field(min_length=3, max_length=200)
-    category: str = Field(min_length=2, max_length=80)
+    subject: str = Field(min_length=3, max_length=255)
+    category: str = Field(min_length=2, max_length=100)
     priority: Priority = Priority.medium
     message: str = Field(min_length=1, max_length=5000)
     

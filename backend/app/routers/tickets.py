@@ -13,7 +13,7 @@ router = APIRouter(prefix='/tickets', tags=['tickets'])
 
 @router.get('', response_model=list[TicketOut])
 def list_tickets(
-    status: Status | None = Query(default=None),user: User = Depends(get_current_user),db: Session = Depends(get_db)
+    status: Status | None = Query(default=None), user: User = Depends(get_current_user), db: Session = Depends(get_db)
     ):
     return ticket_service.list_tickets(db, user, status)
 

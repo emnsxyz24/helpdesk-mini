@@ -12,7 +12,7 @@ app = FastAPI(title="Helpdesk Mini", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,7 +30,7 @@ async def http_error(request: Request, exc: StarletteHTTPException):
 async def validation_exception(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=422,
-        content={'error': {'status': 422, 'message': "Invalid Input", 'detail': jsonable_encoder(exc.errors())}},
+        content={'error': {'status': 422, 'message': "Invalid Input", 'details': jsonable_encoder(exc.errors())}},
     )
 
 app.include_router(auth.router)
